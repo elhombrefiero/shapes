@@ -38,35 +38,11 @@ class Volume:
     This will be translated to a version that corresponds to the equivalent rectangle in matplotlib.
      MATPLOTLIB uses the bottom left corner as the input to the Rectangle class
     """
-    x_bottom_left = None
-    y_bottom_left = None
-
-    x_bottom_right = None
-    y_bottom_right = None
-
-    x_bottom_middle = None
-    y_bottom_middle = None
-
-    x_middle_left = None
-    y_middle_left = None
-
-    x_middle_right = None
-    y_middle_right = None
-
-    x_top_left = None
-    y_top_left = None
-
-    x_top_right = None
-    y_top_right = None
-
-    x_top_middle = None
-    y_top_middle = None
 
     inlet_coordinates = (None, None)
     outlet_coordinates = (None, None)
 
-    x_cor = 0
-    y_cor = 0
+    vol_no = None
     angle_deg = 0
     angle_rad = 0
     flow_area = 0
@@ -82,64 +58,45 @@ class Volume:
         # The angle of rotation will be based on the r_angle
         r_angle_rad = math.radians(r_angle)
         m_angle = r_angle - 90.0
-        m_angle_rad = math.radians(m_angle)
         m_angle_rad_180 = math.radians(m_angle + 180.0)
-
-        print(f'x_start: {x_start}\ty_start: {y_start}\t')
-        print(f'm_angle: {m_angle}')
-        print(f'm_angle_180: {m_angle + 180}')
 
         # The starting position is the inlet of the volume.
         self.inlet_coordinates = (x_start, y_start)
         # The outlet coordinates use the length
         x_outlet = x_start + self.length*np.cos(r_angle_rad)
         y_outlet = y_start + self.length*np.sin(r_angle_rad)
-        self.outlet_coordinates = (x_outlet, y_outlet)
-
-        print(f'x_outlet: {x_outlet}\ty_outlet: {y_outlet}\t')
+        self.outlet_coordinates = (float(x_outlet), float(y_outlet))
 
         # Matplotlib needs the corner.
-        # These need an additional 90-0degree angle
+        # These need an additional 90-degree angle
         x1 = x_start + 0.5*self.flow_area*np.cos(m_angle_rad_180)
         y1 = y_start + 0.5*self.flow_area*np.sin(m_angle_rad_180)
-        x2 = x_start + 0.5*self.flow_area*np.cos(m_angle_rad)
-        y2 = y_start + 0.5*self.flow_area*np.sin(m_angle_rad)
-
-        # TODO: Temporarily set one of the corners to this DELETE
-        self.x_bottom_left = x1
-        self.y_bottom_left = y1
-        self.x_bottom_right = x2
-        self.y_bottom_right = y2
-
-        print(f'x1: {x1}\ty1: {y1}\t')
 
         self.rect = Rectangle((x1, y1), self.flow_area, self.length, angle=m_angle,
                               rotation_point=(x1, y1))
 
-    def plot_me(self):
+    def plot_me(self, show_inlet_outlet=False):
 
         fig, ax = plt.subplots()
         ax.add_patch(self.rect)
-        inlet_coor = self.inlet_coordinates[0], self.outlet_coordinates[0]
-        outlet_coor = self.inlet_coordinates[1], self.outlet_coordinates[1]
-        ax.plot(inlet_coor, outlet_coor, 'o')
-        # TODO: Delete
-
-        ax.plot((self.x_bottom_left, self.x_bottom_right), (self.y_bottom_left, self.y_bottom_right), 'o')
+        if show_inlet_outlet:
+            ax.plot((self.inlet_coordinates[0], self.outlet_coordinates[0]), (self.inlet_coordinates[1],  self.outlet_coordinates[1]), 'o')
         plt.autoscale()
-        print(f'x,y: {self.rect.get_xy()}')
-        print(f'Corners: {self.rect.get_corners()}')
-        print(f'Inlet coordinates: {inlet_coor}')
-        print(f'Outlet coordinates: {outlet_coor}')
         plt.show()
 
     def return_figure(self):
-        pass
+        return self.rect
 
-    def __init__(self, x_start, y_start, angle, length=None, area=None, volume=None):
+    def return_inlet_coordinates(self):
+        return self.inlet_coordinates
+
+    def return_outlet_coordinates(self):
+        return self.outlet_coordinates
+
+    def __init__(self, x_start, y_start, angle, length=None, area=None, volume=None, vol_no=None):
         """ Initialize a volume.
-            Based on the starting x,y coordinates, the angle, the length, and the area, determine the different points of the volume
-            x_start and y_start are going to be the middle of the start of the volume
+            Input starting x,y coordinates, the angle, the length, and the area
+            x_start and y_start are going to be the coordinates of the inlet of the volume
             angle will be in degrees:
                 0 for a horizontal volume that is in the positive x-direction
                 90 for a vertical volume pointing in the positive y-direction
@@ -151,34 +108,17 @@ class Volume:
         # Calculate the length/area based on inputs
         self.length, self.flow_area, self.volume = calculate_length_area_volume(length, area, volume)
 
+        if vol_no:
+            self.vol_no = vol_no
+
         # Figure out direction of angle based on cos/sin
         self.angle_deg = angle
-        # self.angle_rad = angle*np.pi/180
-        #
-        # dx, dy = np.cos(self.angle_rad), np.sin(self.angle_rad)
-        #
-        # if dx >= 0.0:
-        #     x1 = x_start
-        #     x2 = x_start + dx*self.length
-        # else:
-        #     x1 = x_start + dx*self.length
-        #     x2 = x_start
-        # start_point_x = x1 - dx*self.flow_area/2.0
-        # if dy >= 0.0:
-        #     y1 = y_start
-        #     y2 = y_start + dy*self.length
-        # else:
-        #     y1 = y_start + dy*self.length
-        #     y2 = y_start
-        # start_point_y = y1 - dy*self.length/2.0
-        #
-        self.inlet_coordinates = (x_start, y_start)
-        # print(f'Inlet coordinates: {self.inlet_coordinates}')
-        # self.outlet_coordinates = (x2, y2)
 
         self.rel_to_mtplt(x_start, y_start, angle)
 
 
+class Junction:
+    pass
 
 
 if __name__ == '__main__':
@@ -187,7 +127,7 @@ if __name__ == '__main__':
     length = 10.0
     area = 2.0
     volume = 50.0
-    angle = 15.0
+    angle = 60.0
     vol = Volume(x, y, angle, length=length, area=area, volume=volume)
     vol.plot_me()
 
