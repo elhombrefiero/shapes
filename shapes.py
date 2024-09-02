@@ -93,7 +93,7 @@ class Volume:
     def return_outlet_coordinates(self):
         return self.outlet_coordinates
 
-    def __init__(self, x_start, y_start, angle, length=None, area=None, volume=None, vol_no=None):
+    def __init__(self, x_start, y_start, angle_deg, vol_length=None, vol_area=None, vol_volume=None, vol_no=None):
         """ Initialize a volume.
             Input starting x,y coordinates, the angle, the length, and the area
             x_start and y_start are going to be the coordinates of the inlet of the volume
@@ -106,19 +106,36 @@ class Volume:
         """
 
         # Calculate the length/area based on inputs
-        self.length, self.flow_area, self.volume = calculate_length_area_volume(length, area, volume)
+        self.length, self.flow_area, self.volume = calculate_length_area_volume(vol_length, vol_area, vol_volume)
 
         if vol_no:
             self.vol_no = vol_no
 
         # Figure out direction of angle based on cos/sin
-        self.angle_deg = angle
+        self.angle_deg = angle_deg
 
-        self.rel_to_mtplt(x_start, y_start, angle)
+        self.rel_to_mtplt(x_start, y_start, angle_deg)
 
 
 class Junction:
-    pass
+    """ A junction connects two components together.
+
+        An internal junction is not shown in plots, but an external junction is.
+    """
+    internal_junction = None
+    from_component = None
+    to_component = None
+    elevation = None
+
+    def __init__(self, from_component: int, to_component: int):
+        cmp_no1, _ = divmod(from_component, 1000000)
+        cmp_no2, _ = divmod(to_component, 1000000)
+        if cmp_no1 == cmp_no2:
+            self.internal_junction = True
+        else:
+            self.internal_junction = False
+        self.from_component = from_component
+        self.to_component = to_component
 
 
 if __name__ == '__main__':
